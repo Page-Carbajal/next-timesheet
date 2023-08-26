@@ -1,34 +1,6 @@
-function formatDate(d: Date) {
-  const f = new Intl.DateTimeFormat("en-us", {
-    dateStyle: "medium"
-  });
-
-  return f.format(d).replace(', 2023', '');
-}
-
-const dollarUSLocale = Intl.NumberFormat('en-US')
-const sortObjectsByTimeDescending = (array: any, numRecords: number) => {
-  const sortedArray = array.sort((a: any, b: any) => b.time - a.time);
-
-  return sortedArray.slice(0, numRecords);
-};
-
-
-const secondsToHoursMinutes = function (seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  return {hours: hours, minutes: minutes};
-}
-
-
-const secondsToHoursMinutesString = function (seconds: number) {
-  const bean = secondsToHoursMinutes(seconds);
-  const formattedHours = String(bean.hours).padStart(2, '0');
-  const formattedMinutes = String(bean.minutes).padStart(2, '0');
-
-  return `${formattedHours}:${formattedMinutes}`;
-}
+import {dollarUSLocale} from "../../Support/Helpers/NumberFormatFunctions";
+import {sortObjectsByTimeDescending} from "../../Support/Helpers/ArrayFunctions";
+import {formatDate, secondsToHoursMinutesString} from "../../Support/Helpers/DateAndTimeFunctions";
 
 
 const renderTopTask = function (task: any)  {
@@ -50,7 +22,6 @@ export default async function WeekRoundUpBox(props: any) {
   const totalSeconds = record.total;
   const formattedTotalSeconds = dollarUSLocale.format(totalSeconds);
   const clockedTime = secondsToHoursMinutesString(totalSeconds);
-
 
   return (
     <>

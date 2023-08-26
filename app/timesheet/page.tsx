@@ -1,63 +1,12 @@
-import WeekRoundUpBox from "../../Components/Timesheet/WeekRoundUpBox";
-import {Headers} from "next/dist/compiled/@edge-runtime/primitives";
+export const dynamic = 'force-dynamic';
+
+
 import Image from "next/image";
+import WeekRoundUpBox from "../../Components/Timesheet/WeekRoundUpBox";
+import {getWeek, formatDate, getCurrentDate, secondsToHoursMinutesString} from "../../Support/Helpers/DateAndTimeFunctions";
 
 
-const getWeek = function (d: Date) {
-  const date = new Date(d.getFullYear(), 0, 1);
-  const days = Math.floor((d - date) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((days + date.getDay() + 1) / 7);
-  return weekNumber;
-};
-
-
-const secondsToHoursMinutes = function (seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  return {hours: hours, minutes: minutes};
-}
-
-
-const secondsToHoursMinutesString = function (seconds: number) {
-  const bean = secondsToHoursMinutes(seconds);
-
-  return `${bean.hours}:${bean.minutes}`;
-}
-
-
-const timesheetHeader = async function (totalTime: string) {
-  const user = await fetch('http://localhost:3000/api/everhour/current-user').then(r => r.json());
-
-  return (
-    <>
-      <div className="flex pb-6 mb-6 items-center border-b border-black">
-        <Image src={user.avatarUrlLarge} alt={user.name} className="block w-18 xs:w-auto" width={60} height={60}/>
-        <div className="ml-9">
-          <h3 className="block mb-3 text-sm text-coolGray-800">{user.headline}</h3>
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl mb-3">{user.name} - TIMESHEET</h1>
-          <span className="block text-lg text-coolGray-600">
-            From: <strong>August 10<sup>th</sup> to August 24<sup>th</sup></strong>.
-            Total time: <strong>{totalTime}</strong>
-          </span>
-        </div>
-      </div>
-    </>
-  );
-}
-
-const getCurrentDate = function (date: string) {
-  const d = (new Date(date));
-
-  d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-
-  return d;
-}
-
-
-export default async function TimeSheet() {
-
-  const records = await fetch('http://localhost:3000/api/everhour').then(r => r.json());
+const parseRecords = (records: any[]) => {
   const result: any[] = [];
 
   records.forEach((entry: any) => {
@@ -94,21 +43,52 @@ export default async function TimeSheet() {
 
   });
 
-  const under = result.length <= 2 ? 2 : 3;
+  return result;
+}
+
+
+const timesheetHeader = async function (totalTime: number, startDate: Date, endDate: Date) {
+  const user = await fetch('http://localhost:3000/api/everhour/current-user').then(r => r.json());
+  const timesheetTotalTime = secondsToHoursMinutesString(totalTime);
+  const sDate = formatDate(startDate);
+  const eDate = formatDate(endDate);
+
+  return (
+    <>
+      <div className="flex pb-6 mb-6 items-center border-b border-black">
+        <Image src={user.avatarUrlLarge} alt={user.name} className="block w-18 xs:w-auto" width={80} height={80}/>
+        <div className="ml-9">
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl mb-3">{user.name} - TIMESHEET</h1>
+          <span className="block mb-3 text-sm text-coolGray-800">{user.headline}</span>
+          <span className="block text-lg text-coolGray-600">
+            From: <strong>{sDate} to {eDate}</strong>.
+            Total time: <strong>{timesheetTotalTime}</strong>
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+export default async function TimeSheet() {
+
+  const records = await fetch('http://localhost:3000/api/everhour').then(r => r.json());
+  const weekGroups = parseRecords(records);
+  const under = weekGroups.length <= 2 ? 2 : 3;
   const boxStyles = `w-1/${under} px-4 mb-20`;
-  const timesheetTotalTime = result.reduce((accumulator, w) => {
+  const timesheetTotalTime = weekGroups.reduce((accumulator, w) => {
     return accumulator + w.total;
   }, 0);
-  const formattedTimesheetTime = secondsToHoursMinutesString(timesheetTotalTime);
-
-  // const boxStyles = `w-full sm:w-full lg:w-1/${under} px-4 mb-20`;
+  const minDate = getCurrentDate(records.reduce((min, p) => p.date < min ? p.date : min, records[0].date));
+  const maxDate = getCurrentDate(records.reduce((max, p) => p.date > max ? p.date : max, records[0].date));
 
   return (<>
     <section className="py-12 md:py-24 bg-coolGray-50">
       <div className="container mx-auto px-4">
-        {timesheetHeader(formattedTimesheetTime)}
+        {timesheetHeader(timesheetTotalTime, minDate, maxDate)}
         <div className="flex flex-wrap -mx-4 -mb-20">
-          {result.map((record: any, index: any) => (
+          {weekGroups.map((record: any, index: any) => (
             <WeekRoundUpBox key={index} boxClass={boxStyles} record={record}/>
           ))}
         </div>
