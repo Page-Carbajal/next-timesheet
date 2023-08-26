@@ -12,9 +12,24 @@ const renderTopTask = function (task: any)  {
 }
 
 
+const renderDayDetails = function (day: any)  {
+  const taskSeconds = dollarUSLocale.format(day.time);
+  const totalTime = secondsToHoursMinutesString(day.time);
+  const taskDate = formatDate(day.date);
+  return (
+    <li>
+      <strong>{taskDate}</strong> &ndash;
+      Time: <strong>{totalTime}</strong>, &nbsp;
+      Tasks: <strong>{day.count}</strong>
+    </li>
+  )
+}
+
+
 export default async function WeekRoundUpBox(props: any) {
   const {boxClass, record} = props;
   const currentTasks = Object.keys(record.tasks).map(taskId => record.tasks[taskId]);
+  const currentDays = Object.keys(record.days).map(day => record.days[day]);
   const topTasks = sortObjectsByTimeDescending(currentTasks, 5);
   const startDate = formatDate(record.startDate);
   const endDate = formatDate(record.endDate);
@@ -22,6 +37,8 @@ export default async function WeekRoundUpBox(props: any) {
   const totalSeconds = record.total;
   const formattedTotalSeconds = dollarUSLocale.format(totalSeconds);
   const clockedTime = secondsToHoursMinutesString(totalSeconds);
+
+  console.log('Days: ', currentDays);
 
   return (
     <>
@@ -34,6 +51,12 @@ export default async function WeekRoundUpBox(props: any) {
             <li>Total tasks: <strong>{totalTasks}</strong></li>
             <li>Total seconds: <strong>{formattedTotalSeconds}</strong></li>
           </ul>
+
+          <h4 className="text-2xl mt-6 mb-1 text-gray-500">Breakdown by Day</h4>
+          <ol className="text-sm text-gray-500">
+            {currentDays.map((t: any) => renderDayDetails(t) ) }
+          </ol>
+
           <h4 className="text-2xl mt-6 mb-1 text-gray-500">Top tasks</h4>
           <ol className="text-sm text-gray-500 list-decimal">
             {topTasks.map((t: any) => renderTopTask(t) ) }

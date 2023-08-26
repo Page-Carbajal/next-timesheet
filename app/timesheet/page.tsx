@@ -3,7 +3,12 @@ export const dynamic = 'force-dynamic';
 
 import Image from "next/image";
 import WeekRoundUpBox from "../../Components/Timesheet/WeekRoundUpBox";
-import {getWeek, formatDate, getCurrentDate, secondsToHoursMinutesString} from "../../Support/Helpers/DateAndTimeFunctions";
+import {
+  getWeek,
+  formatDate,
+  getCurrentDate,
+  secondsToHoursMinutesString
+} from "../../Support/Helpers/DateAndTimeFunctions";
 
 
 const parseRecords = (records: any[]) => {
@@ -22,7 +27,8 @@ const parseRecords = (records: any[]) => {
         startDate: entryDate,
         endDate: entryDate,
         total: 0,
-        tasks: []
+        tasks: [],
+        days: []
       };
     }
 
@@ -39,6 +45,18 @@ const parseRecords = (records: any[]) => {
       };
     } else {
       result[weekNumber].tasks[entry.task.id].time += taskTime;
+    }
+
+    const dayKey = entryDate.toISOString();
+    if (!result[weekNumber].days[dayKey]) {
+      result[weekNumber].days[dayKey] = {
+        date: entryDate,
+        time: taskTime,
+        count: 1
+      };
+    } else {
+      result[weekNumber].days[dayKey].time += taskTime;
+      result[weekNumber].days[dayKey].count++;
     }
 
   });
@@ -72,7 +90,6 @@ const timesheetHeader = async function (totalTime: number, startDate: Date, endD
 
 
 export default async function TimeSheet() {
-
   const records = await fetch('http://localhost:3000/api/everhour').then(r => r.json());
   const weekGroups = parseRecords(records);
   const under = weekGroups.length <= 2 ? 2 : 3;
