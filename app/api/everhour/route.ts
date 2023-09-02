@@ -4,8 +4,8 @@ import {getRequestOptions, getTargetUrl} from "@/api/everhour/(support)/urlBuild
 
 export async function GET() {
   const params = {
-    from: '2023-08-10',
-    to: '2023-08-24',
+    from: '2023-08-25',
+    to: '2023-09-09',
     limit: 500,
     page: 1
   }
