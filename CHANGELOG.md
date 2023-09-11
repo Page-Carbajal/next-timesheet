@@ -1,5 +1,10 @@
 # Next-Timehseet – Change Log
 
+### September 1st 
+
+- Installed Next-Auth 
+
+
 ### August 25th 
 
 - Created Day Breakdown section
